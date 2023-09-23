@@ -1,0 +1,57 @@
+MODULES:
+  - "image_managers"
+  - "vae"
+  - "diffusion"
+  - "latent_diffusion"
+  - "unet"
+
+image_manager:
+  CLASS: "Cifar10Manager"
+  data_root: "../data"
+
+
+vae_config:
+  CLASS: "VAEConfig"
+  num_latents: 3
+  beta: 1.0
+  stage_depths: [3, 3]
+  channels: 64
+  channel_mults: [1, 2]
+  learning_rate: 0.0005
+  weight_decay: 0.001
+  x_logvar_learning_rate: 0.02
+
+vae:
+  model:
+    CLASS: "VAE"
+    cfg:
+      REF: "vae_config"
+
+  max_epochs: 100
+  batch_size: 128
+  swa_lrs: 0.0001
+
+latent_diffusion:
+  model:
+    CLASS: "LatentDiffusion"
+    vae_config:
+      REF: "vae_config"
+    diffusion_config:
+      CLASS: "DiffusionConfig"
+      unet_config:
+        CLASS: "UNetConfig"
+        input_channels: 3
+        input_size: 16
+        channels: 192
+        num_blocks: [4, 4, 2]
+        channel_mults: [1, 2, 4]
+        attn_resolutions: [8, 4]
+        conditional: False
+      time_steps: 1000
+      learning_rate: 0.0002
+      weight_decay: 0.0002
+      qkv_weight_decay: 0.01
+
+  max_epochs: 1000
+  batch_size: 256
+  swa_lrs: 0.0001
